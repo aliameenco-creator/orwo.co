@@ -1,0 +1,65 @@
+[
+  {
+    "slug": "home",
+    "title": "Home",
+    "path": "",
+    "front": true,
+    "seo_title": "ORWO Film Community",
+    "description": "ORWO A brand of Excellence in\nBlack and White film products,\nMade in Germany"
+  },
+  {
+    "slug": "contact",
+    "title": "Contact",
+    "path": "contact"
+  },
+  {
+    "slug": "gallery",
+    "title": "Gallery",
+    "path": "gallery",
+    "seo_title": "Gallery - ORWO Film Community",
+    "description": ""
+  },
+  {
+    "slug": "shot-on-orwo",
+    "title": "Shot on ORWO",
+    "path": "shot-on-orwo",
+    "seo_title": "Shot on ORWO - ORWO Film Community",
+    "description": ""
+  },
+  {
+    "slug": "blog",
+    "title": "Blog",
+    "path": "blog",
+    "seo_title": "Blog - ORWO Film Community",
+    "description": ""
+  },
+  {
+    "slug": "cookie-policy",
+    "title": "Cookie Policy",
+    "path": "pages/cookie-policy",
+    "seo_title": "Cookie Policy - GDPR - ORWO Film Community",
+    "description": "Learn about our site's cookie policy, why we use cookies, and how to manage and delete cookies."
+  },
+  {
+    "slug": "the-revival-of-analog-film-why-film-photography-is-making-a-comeback",
+    "title": "The Revival of Analog Film: Why Film Photography is Making a Comeback",
+    "path": "blog/the-revival-of-analog-film-why-film-photography-is-making-a-comeback",
+    "type": "post",
+    "date": "2024-10-28T09:16:40.863-07:00",
+    "featured": "/assets/img/3cdb3c1aaca17367-1024.webp",
+    "excerpt": "In a world dominated by high-definition screens and digital everything, analog film photography has made a surprising comeback. From seasoned photographers who never gave up their love for film to newcomers curious about this vintage art form, film photography is becoming a popular way to capture and experience moments in an entirely different way. But what’s driving this renaissance? Let’s explore the magic of analog film, the role of brands like ORWO, and why film still holds a special place in the hearts of so many.",
+    "seo_title": "The Revival of Analog Film: Why Film Photography is Making a Comeback",
+    "description": "In a world dominated by high-definition screens and digital everything, analog film photography has made a surprising comeback. From seasoned photographers who never gave up their "
+  },
+  {
+    "slug": "optimized-microfilms-with-antimicrobial-properties-for-secure-long-term-data",
+    "title": "Optimized microfilms with antimicrobial properties for secure long-term data storage",
+    "path": "blog/optimized-microfilms-with-antimicrobial-properties-for-secure-long-term-data",
+    "type": "post",
+    "date": "2021-07-29T02:01:52.076-07:00",
+    "featured": "/assets/img/982b0cc818bf8f0c-1440.webp",
+    "excerpt": "In a joint research project, the Fraunhofer Institute for Microstructure of Materials and Systems IMWS and FilmoTec GmbH Bitterfeld-Wolfen have developed a new technology that improves the resistance of microfilms to mechanical and biochemical environmental influences and thus increases their long-term stability.",
+    "seo_title": "Optimized microfilms with antimicrobial properties for secure long-term data storage",
+    "description": "BY FRAUNHOFER IMWS In a joint research project, the Fraunhofer Institute for Microstructure of Materials and Systems IMWS and FilmoTec GmbH Bitterfeld-Wolfen have developed a new t"
+  }
+]

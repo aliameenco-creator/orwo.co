@@ -1,0 +1,155 @@
+{
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "760px",
+      "wideSize": "1320px"
+    },
+    "color": {
+      "palette": [
+        {
+          "slug": "navy",
+          "name": "ORWO Navy",
+          "color": "#040463"
+        },
+        {
+          "slug": "ink",
+          "name": "Ink",
+          "color": "#18191d"
+        },
+        {
+          "slug": "paper",
+          "name": "Paper",
+          "color": "#f6f5f1"
+        },
+        {
+          "slug": "white",
+          "name": "White",
+          "color": "#ffffff"
+        }
+      ]
+    },
+    "typography": {
+      "fontFamilies": [
+        {
+          "name": "Lora",
+          "slug": "lora",
+          "fontFamily": "Lora, Georgia, serif",
+          "fontFace": [
+            {
+              "fontFamily": "Lora",
+              "fontStyle": "normal",
+              "fontWeight": "400 700",
+              "src": [
+                "file:./assets/fonts/lora.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Lora",
+              "fontStyle": "italic",
+              "fontWeight": "400 700",
+              "src": [
+                "file:./assets/fonts/lora-italic.woff2"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Fira Sans",
+          "slug": "fira",
+          "fontFamily": "\"Fira Sans\", sans-serif",
+          "fontFace": [
+            {
+              "fontFamily": "Fira Sans",
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "src": [
+                "file:./assets/fonts/fira-sans.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Fira Sans",
+              "fontStyle": "normal",
+              "fontWeight": "500",
+              "src": [
+                "file:./assets/fonts/fira-sans-medium.woff2"
+              ]
+            }
+          ]
+        }
+      ],
+      "fluid": true
+    },
+    "spacing": {
+      "units": [
+        "px",
+        "rem",
+        "vw",
+        "%"
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#f6f5f1",
+      "text": "#18191d"
+    },
+    "typography": {
+      "fontFamily": "var:preset|font-family|fira",
+      "fontSize": "18px",
+      "lineHeight": "1.65"
+    },
+    "spacing": {
+      "blockGap": "1.3rem"
+    },
+    "elements": {
+      "heading": {
+        "typography": {
+          "fontFamily": "var:preset|font-family|lora",
+          "fontWeight": "400",
+          "lineHeight": "1.16"
+        }
+      },
+      "link": {
+        "color": {
+          "text": "inherit"
+        }
+      },
+      "button": {
+        "color": {
+          "background": "#040463",
+          "text": "#ffffff"
+        },
+        "border": {
+          "radius": "0"
+        },
+        "typography": {
+          "fontFamily": "var:preset|font-family|fira",
+          "fontSize": "15px",
+          "fontWeight": "500"
+        },
+        "spacing": {
+          "padding": {
+            "top": "16px",
+            "bottom": "16px",
+            "left": "26px",
+            "right": "26px"
+          }
+        }
+      }
+    }
+  },
+  "templateParts": [
+    {
+      "name": "header",
+      "title": "Header",
+      "area": "header"
+    },
+    {
+      "name": "footer",
+      "title": "Footer",
+      "area": "footer"
+    }
+  ]
+}
