@@ -37,6 +37,7 @@ function orwoco_pages_seed() {
         if ( is_wp_error( $id ) ) { $report[] = $row['title'] . ': FAILED — ' . $id->get_error_message(); continue; }
         update_option( 'orwoco_page_' . $key, $id, false );
         if ( 'contact' === $key ) { update_option( 'orwoco_update_contact_map', 1, false ); }
+        if ( 'home' === $key ) { update_option( 'orwoco_update_clothing', 1, false ); }
         update_post_meta( $id, '_orwoco_original_path', $row['path'] );
         $title = $row['seo_title'] ?? $row['title'] . ' - ORWO Film Community';
         update_post_meta( $id, '_orwoco_seo_title', $title );
@@ -135,12 +136,33 @@ function orwoco_apply_headings() {
     update_option( 'orwoco_update_headings', 1, false );
     return $lines ?: array( 'Article headings: nothing to change.' );
 }
-function orwoco_updates_pending() { return orwoco_contact_map_pending() || orwoco_headings_pending(); }
+/** 1.2.0: the homepage Clothing tile is removed (owner request); matched by its heading and image alt, never by position. */
+function orwoco_clothing_pattern() {
+    return '~\s*<!-- wp:group \{"className":"image-tile"\} -->\s*<div class="wp-block-group image-tile"><!-- wp:image \{[^}]*\} -->\s*<figure[^>]*><img[^>]*alt="ORWO clothing"[^>]*/?></figure>\s*<!-- /wp:image -->\s*<!-- wp:heading \{"level":3\} -->\s*<h3 class="wp-block-heading">Clothing</h3>\s*<!-- /wp:heading --></div>\s*<!-- /wp:group -->~';
+}
+function orwoco_home_page() {
+    $id = (int) get_option( 'orwoco_page_home' );
+    $page = $id ? get_post( $id ) : null;
+    return ( $page && 'page' === $page->post_type ) ? $page : null;
+}
+function orwoco_clothing_pending() {
+    $page = orwoco_home_page();
+    return $page && ! get_option( 'orwoco_update_clothing' ) && preg_match( orwoco_clothing_pattern(), $page->post_content );
+}
+function orwoco_apply_clothing() {
+    $page = orwoco_home_page();
+    update_option( 'orwoco_update_clothing', 1, false );
+    if ( ! $page || ! preg_match( orwoco_clothing_pattern(), $page->post_content ) ) { return 'Clothing tile: not found unchanged on the homepage; nothing removed.'; }
+    wp_save_post_revision( $page->ID );
+    $done = wp_update_post( wp_slash( array( 'ID' => $page->ID, 'post_content' => preg_replace( orwoco_clothing_pattern(), '', $page->post_content, 1 ) ) ), true );
+    return is_wp_error( $done ) ? 'Clothing tile: FAILED — ' . $done->get_error_message() : 'Clothing tile: removed from the homepage (previous version kept as a revision).';
+}
+function orwoco_updates_pending() { return orwoco_contact_map_pending() || orwoco_headings_pending() || orwoco_clothing_pending(); }
 
 add_action( 'admin_menu', function () {
     add_theme_page( 'ORWO Setup', 'ORWO Setup', 'manage_options', 'orwoco-setup', function () {
         echo '<div class="wrap"><h1>ORWO Film Community</h1><p>Create the original editable pages, two posts, Media Library images, navigation, header and footer. Existing records and editor changes are preserved. Setup publishes new original pages and selects Home as the front page. Back up an existing site first.</p><p><a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=orwoco_setup' ), 'orwoco_setup' ) ) . '">Complete ORWO setup</a></p><p>Edit pages under Pages, articles under Posts, and the header/footer/navigation under Appearance → Editor. Notification destination is under Settings → General. Submissions are under Enquiries; newsletter sign-ups are stored for your own mailing system.</p>';
-        if ( orwoco_updates_pending() ) { echo '<h2>Update 1.1.0</h2><p>Adds the embedded Google map to your Contact page below the form, and shows the original article section titles as headings. Only those parts change; edited paragraphs are left alone and each page keeps its previous version as a revision.</p><p><a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=orwoco_update_map' ), 'orwoco_update_map' ) ) . '">Apply 1.1.0 updates</a></p>'; }
+        if ( orwoco_updates_pending() ) { echo '<h2>Theme content updates</h2><p>Adds the embedded Google map to your Contact page below the form, shows the original article section titles as headings, and removes the Clothing tile from the homepage. Only those parts change; edited paragraphs are left alone and each page keeps its previous version as a revision.</p><p><a class="button button-primary" href="' . esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=orwoco_update_map' ), 'orwoco_update_map' ) ) . '">Apply theme updates</a></p>'; }
         echo '<h2>Latest setup report</h2><ul>';
         foreach ( (array) get_option( 'orwoco_setup_report', array() ) as $line ) { echo '<li>' . esc_html( $line ) . '</li>'; }
         echo '</ul></div>';
@@ -150,12 +172,12 @@ add_action( 'admin_notices', function () {
     if ( current_user_can( 'manage_options' ) && ! get_option( 'orwoco_setup_done' ) ) { echo '<div class="notice notice-info"><p><strong>ORWO:</strong> <a href="' . esc_url( admin_url( 'themes.php?page=orwoco-setup' ) ) . '">Complete ORWO setup</a> to create your editable website.</p></div>'; }
 } );
 add_action( 'admin_notices', function () {
-    if ( current_user_can( 'manage_options' ) && get_option( 'orwoco_setup_done' ) && orwoco_updates_pending() ) { echo '<div class="notice notice-info"><p><strong>ORWO 1.1.0:</strong> <a href="' . esc_url( admin_url( 'themes.php?page=orwoco-setup' ) ) . '">Apply the 1.1.0 updates</a> (Contact map and article headings).</p></div>'; }
+    if ( current_user_can( 'manage_options' ) && get_option( 'orwoco_setup_done' ) && orwoco_updates_pending() ) { echo '<div class="notice notice-info"><p><strong>ORWO:</strong> <a href="' . esc_url( admin_url( 'themes.php?page=orwoco-setup' ) ) . '">Apply theme updates</a> to your pages (Contact map, article headings, homepage Clothing tile).</p></div>'; }
 } );
 add_action( 'admin_post_orwoco_update_map', function () {
     if ( ! current_user_can( 'manage_options' ) ) { wp_die( 'Not allowed.' ); }
     check_admin_referer( 'orwoco_update_map' );
-    update_option( 'orwoco_setup_report', array_merge( array( orwoco_apply_contact_map() ), orwoco_apply_headings() ), false );
+    update_option( 'orwoco_setup_report', array_merge( array( orwoco_apply_contact_map(), orwoco_apply_clothing() ), orwoco_apply_headings() ), false );
     wp_safe_redirect( admin_url( 'themes.php?page=orwoco-setup' ) ); exit;
 } );
 add_action( 'admin_post_orwoco_setup', function () {

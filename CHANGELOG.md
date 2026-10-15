@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 — 2026-10-15
+
+- Blog cards are compact: image beside the title and a three-line excerpt on desktop, smaller titles; article page titles are smaller.
+- "A Brief History" scroll reveal is one continuous reading line: a passage only starts lighting up after the one above it has finished, on desktop and phones.
+- New phone menu: full-screen panel with large serif links, dividers, the current page highlighted, a full-width Buy film button and a soft staggered entrance.
+- Desktop header: translucent blurred bar that compacts on scroll, current page underlined, rounded Buy film button.
+- Homepage: Clothing tile removed; Shot on ORWO and Gallery tiles are two rounded image cards. Buttons and images have slightly rounded corners.
+- Hero photograph has a slow, subtle drift (off when reduced motion is requested).
+- Appearance → ORWO Setup → "Apply theme updates" now also removes the Clothing tile from an existing homepage (matched by its heading and image; previous version kept as a revision).
+
 ## 1.1.0 — 2026-10-15
 
 - Fixed blog articles: every article now opens at /blog/<slug>/ without relying on rewrite rules (on the live site one article redirected to its image file and the other returned "page not found"). New articles you write also use /blog/<slug>/; mistyped article URLs show the 404 page instead of redirecting to a similarly named image.

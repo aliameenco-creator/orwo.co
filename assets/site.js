@@ -28,11 +28,15 @@
     let queued = false;
     const paint = () => {
       queued = false;
-      const vh = innerHeight;
+      const vh = innerHeight, y = scrollY;
+      // One continuous reading line: a passage never starts until the one above it is fully lit.
+      let previousEnd = -Infinity;
       sets.forEach(set => {
-        const r = set.p.getBoundingClientRect();
-        // Starts as the passage enters the lower screen; complete once its end reaches the middle.
-        const progress = Math.min(1, Math.max(0, (vh * .88 - r.top) / (r.height + vh * .38)));
+        const r = set.p.getBoundingClientRect(), top = r.top + y;
+        const start = Math.max(top - vh * .85, previousEnd);
+        const end = Math.max(top + r.height - vh * .62, start + Math.max(r.height * .8, vh * .25));
+        previousEnd = end;
+        const progress = Math.min(1, Math.max(0, (y - start) / (end - start)));
         const lit = Math.round(progress * set.words.length);
         if (lit === set.lit) return;
         const [from, to, on] = lit > set.lit ? [set.lit, lit, true] : [lit, set.lit, false];
@@ -42,6 +46,21 @@
     };
     const queue = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
     addEventListener('scroll', queue, {passive: true}); addEventListener('resize', queue); paint();
+  }
+  // Mark the current section in the menu (articles count as Blog).
+  const here = location.pathname.replace(/\/+$/, '') || '/';
+  document.querySelectorAll('.orwoco-nav a').forEach(a => {
+    let url; try { url = new URL(a.href); } catch { return; }
+    if (url.origin !== location.origin) return;
+    const path = url.pathname.replace(/\/+$/, '') || '/';
+    if (path === here || (path !== '/' && here.startsWith(path + '/'))) a.setAttribute('aria-current', 'page');
+  });
+  // Compact header once the page scrolls.
+  const header = document.querySelector('.site-header');
+  if (header) {
+    let queued = false;
+    const mark = () => { queued = false; header.classList.toggle('is-scrolled', scrollY > 24); };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(mark); } }, {passive: true}); mark();
   }
   // Thin reading-progress line on articles.
   const bar = document.querySelector('.orwoco-progress span'), article = document.querySelector('.orwoco-article');
