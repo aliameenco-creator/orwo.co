@@ -7,6 +7,49 @@
     }), {threshold: .06});
     document.querySelectorAll('.section-top,.image-tile,.history-column,.film-card,.gallery-photo,.orwoco-post-grid>li').forEach(el => observer.observe(el));
   }
+  // History story: words brighten as each passage scrolls through the screen. The text stays fully readable without JS.
+  const passages = [...document.querySelectorAll('.history-column p:not(.history-number)')];
+  if (!reduced.matches && passages.length) {
+    const sets = passages.map(p => {
+      const walker = document.createTreeWalker(p, NodeFilter.SHOW_TEXT), nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(node => {
+        const frag = document.createDocumentFragment();
+        node.textContent.split(/(\s+)/).forEach(part => {
+          if (!part) return;
+          if (/^\s+$/.test(part)) { frag.append(part); return; }
+          const s = document.createElement('span'); s.className = 'w'; s.textContent = part; frag.append(s);
+        });
+        node.replaceWith(frag);
+      });
+      return {p, words: [...p.querySelectorAll('.w')], lit: 0};
+    });
+    document.documentElement.classList.add('orwoco-scrolltext');
+    let queued = false;
+    const paint = () => {
+      queued = false;
+      const vh = innerHeight;
+      sets.forEach(set => {
+        const r = set.p.getBoundingClientRect();
+        // Starts as the passage enters the lower screen; complete once its end reaches the middle.
+        const progress = Math.min(1, Math.max(0, (vh * .88 - r.top) / (r.height + vh * .38)));
+        const lit = Math.round(progress * set.words.length);
+        if (lit === set.lit) return;
+        const [from, to, on] = lit > set.lit ? [set.lit, lit, true] : [lit, set.lit, false];
+        for (let i = from; i < to; i++) set.words[i].classList.toggle('on', on);
+        set.lit = lit;
+      });
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(paint); } };
+    addEventListener('scroll', queue, {passive: true}); addEventListener('resize', queue); paint();
+  }
+  // Thin reading-progress line on articles.
+  const bar = document.querySelector('.orwoco-progress span'), article = document.querySelector('.orwoco-article');
+  if (bar && article && !reduced.matches) {
+    let queued = false;
+    const update = () => { queued = false; const r = article.getBoundingClientRect(); bar.style.setProperty('--p', Math.min(1, Math.max(0, -r.top / Math.max(1, r.height - innerHeight)))); };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, {passive: true}); update();
+  }
   const dialog = document.createElement('dialog');
   dialog.className = 'orwoco-lightbox';
   dialog.setAttribute('aria-label', 'Community photograph');

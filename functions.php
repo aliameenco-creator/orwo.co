@@ -45,29 +45,66 @@ add_shortcode( 'orwoco_form', function ( $attrs ) {
 } );
 add_shortcode( 'orwoco_copyright', function () { return '<p>ORWO &copy; ' . esc_html( wp_date( 'Y' ) ) . '</p>'; } );
 
+/** Embedded Google map; the address is editable in the shortcode block: [orwoco_map address="…"]. */
+add_shortcode( 'orwoco_map', function ( $attrs ) {
+    $atts = shortcode_atts( array( 'address' => 'Röntgenstraße 3, 06766 Bitterfeld-Wolfen, Germany' ), $attrs );
+    $q = rawurlencode( $atts['address'] );
+    return '<div class="orwoco-map-frame"><iframe title="' . esc_attr( 'Map: ' . $atts['address'] ) . '" src="' . esc_url( 'https://maps.google.com/maps?q=' . $q . '&z=15&output=embed' ) . '" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></div>'
+        . '<p class="orwoco-map-link"><a href="' . esc_url( 'https://www.google.com/maps/search/?api=1&query=' . $q ) . '">Open in Google Maps ↗</a></p>';
+} );
+
+/** Article reading time for the single-article template. */
+add_shortcode( 'orwoco_reading_time', function () {
+    $words = str_word_count( wp_strip_all_tags( (string) get_post_field( 'post_content', get_the_ID() ) ) );
+    return '<p class="orwoco-reading-time">' . esc_html( max( 1, (int) ceil( $words / 220 ) ) . ' min read' ) . '</p>';
+} );
+
+/** "More from the blog" on an article never repeats the article being read. */
+add_filter( 'query_loop_block_query_vars', function ( $query, $block ) {
+    if ( is_singular( 'post' ) && 77 === (int) ( $block->context['queryId'] ?? 0 ) ) {
+        $query['post__not_in'] = array( get_queried_object_id() );
+    }
+    return $query;
+}, 10, 2 );
+
 /** No title duplication: seeded layouts contain their own H1; editor-created pages get a native title. */
 add_filter( 'render_block_core/post-title', function ( $html, $block ) {
     if ( ! empty( $block['attrs']['className'] ) && str_contains( $block['attrs']['className'], 'orwoco-auto-title' ) && str_contains( (string) get_post_field( 'post_content', get_the_ID() ), 'orwoco-hero' ) ) { return ''; }
     return $html;
 }, 10, 2 );
 
-/** Original post paths stay /blog/<slug>/ without replacing other sites' permalink settings. */
-add_action( 'init', function () {
-    foreach ( orwoco_pages_data() as $row ) {
-        if ( 'post' === ( $row['type'] ?? '' ) ) { add_rewrite_rule( '^' . preg_quote( $row['path'], '~' ) . '/?$', 'index.php?name=' . $row['slug'], 'top' ); }
-    }
+/**
+ * Every article lives at /blog/<slug>/ (the original ORWO structure), including articles written later.
+ * Resolved directly from the request path, so it never depends on rewrite rules having been flushed on the host.
+ */
+function orwoco_request_path() {
+    $path = trim( rawurldecode( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ) ), '/' );
+    $base = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
+    return ( $base && str_starts_with( $path, $base . '/' ) ) ? substr( $path, strlen( $base ) + 1 ) : $path;
+}
+add_filter( 'request', function ( $vars ) {
+    if ( is_admin() || ! preg_match( '~^blog/([^/]+)$~', orwoco_request_path(), $m ) || get_page_by_path( 'blog/' . $m[1] ) ) { return $vars; }
+    $slug = sanitize_title( $m[1] );
+    $found = get_posts( array( 'post_type' => 'post', 'name' => $slug, 'post_status' => array( 'publish', 'private', 'future', 'draft', 'pending' ), 'numberposts' => 1, 'fields' => 'ids', 'suppress_filters' => false ) );
+    if ( ! $found ) { return $vars; }
+    $keep = array_intersect_key( $vars, array_flip( array( 'preview', 'p', 'preview_id', 'preview_nonce', 'cpage' ) ) );
+    return array_merge( $keep, array( 'name' => $slug, 'post_type' => 'post' ) );
 } );
 add_filter( 'post_link', function ( $link, $post ) {
-    $path = get_post_meta( $post->ID, '_orwoco_original_path', true );
-    return $path ? home_url( user_trailingslashit( '/' . $path ) ) : $link;
+    if ( '' === (string) get_option( 'permalink_structure' ) || '' === $post->post_name || ! in_array( $post->post_status, array( 'publish', 'private', 'future' ), true ) ) { return $link; }
+    return home_url( user_trailingslashit( '/blog/' . $post->post_name ) );
 }, 10, 2 );
+// A mistyped article address shows the 404 page instead of a fuzzy redirect to a similarly named image file.
+add_filter( 'strict_redirect_guess_404_permalink', '__return_true' );
 add_action( 'template_redirect', function () {
     if ( is_preview() || ! in_array( $_SERVER['REQUEST_METHOD'] ?? '', array( 'GET', 'HEAD' ), true ) ) { return; }
-    $path = trim( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ), '/' );
-    $base = trim( (string) wp_parse_url( home_url(), PHP_URL_PATH ), '/' );
-    if ( $base && str_starts_with( $path, $base . '/' ) ) { $path = substr( $path, strlen( $base ) + 1 ); }
+    $path = orwoco_request_path();
     $aliases = array( 'home' => '/', '_blog' => '/blog/', 'blog/categories' => '/blog/', 'pages' => '/pages/cookie-policy/' );
     if ( isset( $aliases[ $path ] ) ) { wp_safe_redirect( home_url( $aliases[ $path ] ), 301 ); exit; }
+    // One address per article: date/postname/?p= variants redirect to /blog/<slug>/.
+    if ( is_singular( 'post' ) && 'publish' === get_post_status() && '' !== (string) get_option( 'permalink_structure' ) && 'blog/' . rawurldecode( (string) get_post_field( 'post_name' ) ) !== $path ) {
+        wp_safe_redirect( get_permalink(), 301 ); exit;
+    }
     if ( 'search' === $path ) { wp_safe_redirect( add_query_arg( 's', sanitize_text_field( is_string( $_GET['q'] ?? null ) ? wp_unslash( $_GET['q'] ) : '' ), home_url( '/' ) ), 301 ); exit; }
 } );
 
